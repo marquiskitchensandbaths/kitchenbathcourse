@@ -366,6 +366,46 @@ h1[tabindex="-1"]:focus{outline:none}
 .secres td.noc{color:var(--red);font-weight:700}
 @media (max-width:640px){.ord li{grid-template-columns:22px minmax(0,1fr);}.ord .mv{grid-column:2;justify-content:flex-start}.numin input{width:100%}}
 
+/* ---------- video lessons ---------- */
+:root{--v1:#F6F4EE;--v2:#DEDACF;--v3:#C5C0B3;--vh1:#E6ECF8;--vh2:#CAD7EF;--vh3:#ACC0E4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--v1:#3B4D66;--v2:#2E3E54;--v3:#233145;--vh1:#3E6299;--vh2:#315183;--vh3:#27436E}}
+:root[data-theme="dark"]{--v1:#3B4D66;--v2:#2E3E54;--v3:#233145;--vh1:#3E6299;--vh2:#315183;--vh3:#27436E}
+.fig .vt,.fig .vf,.fig .vs,.fig .vth,.fig .vfh,.fig .vsh{stroke:var(--ink);stroke-width:.9;stroke-linejoin:round}
+.fig .vt{fill:var(--v1)}.fig .vf{fill:var(--v2)}.fig .vs{fill:var(--v3)}
+.fig .vth{fill:var(--vh1)}.fig .vfh{fill:var(--vh2)}.fig .vsh{fill:var(--vh3)}
+.fig .vbig{font:700 22px var(--disp);fill:var(--ink)}
+.fig .vmid{font:500 15px var(--sans);fill:var(--ink2)}
+.fig .vok{font:700 17px var(--sans);fill:var(--blue)}
+.vplayer{margin:1.5em 0 1.9em;max-width:880px;border:1.5px solid var(--ink);border-radius:var(--r);background:var(--sheet)}
+.vhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 14px 2px;font:700 1.12rem/1.3 var(--disp);letter-spacing:.01em}
+.vdur{font:500 .92rem var(--sans);color:var(--stone);white-space:nowrap}
+.vstage{position:relative;padding:4px 10px 0;cursor:pointer;border-radius:var(--r)}
+.vstage:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.vsvg .fig{min-width:0;width:100%;height:auto;display:block}
+.vgo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;border:0;background:var(--blue);color:var(--blue-ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.22)}
+.vgo svg{width:32px;height:32px;margin-left:3px}
+.vgo:hover{filter:brightness(1.08)}
+.vgo[hidden]{display:none}
+.vcap{min-height:3.3em;margin:0;padding:10px 16px;border-top:1px solid var(--line2);font:400 1.06rem/1.55 var(--serif);color:var(--ink)}
+.vctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px 10px;border-top:1px solid var(--line)}
+.vctl .btn svg{width:16px;height:16px;flex:none}
+.vctl .vplay{min-width:104px;gap:6px}
+.vbtn{width:44px;padding:0;justify-content:center}
+.vseekw{position:relative;flex:1 1 170px;min-width:130px;display:flex;align-items:center;height:40px}
+.vseek{width:100%;margin:0;accent-color:var(--blue);position:relative;z-index:1;background:transparent}
+.vticks{position:absolute;left:8px;right:8px;top:50%;height:0;pointer-events:none}
+.vticks i{position:absolute;top:-8px;width:2px;height:16px;background:var(--line2);transform:translateX(-1px)}
+.vtime{font:600 .95rem var(--sans);color:var(--stone);min-width:92px;text-align:center;font-variant-numeric:tabular-nums}
+.vspeed{height:40px;font:500 .95rem var(--sans)}
+.vtrans{border-top:1px solid var(--line);padding:8px 14px 10px}
+.vtrans summary{cursor:pointer;font:600 1rem var(--sans);color:var(--ink2)}
+.vtrans ol{margin:8px 0 2px;padding-left:1.5em}
+.vtrans li{margin:5px 0;font:400 1rem/1.5 var(--serif)}
+.vjump{border:0;background:none;color:var(--blue);font:600 .92rem var(--sans);cursor:pointer;padding:2px 6px 2px 0;text-decoration:underline;text-underline-offset:2px}
+.vplayer figcaption{padding:0 14px 12px;color:var(--stone);font-size:.95rem}
+.vitem{margin:0 0 30px}.vmeta{margin:0 0 -8px;color:var(--stone);font:500 .98rem var(--sans)}
+@media (max-width:640px){.vhead{flex-direction:column;gap:0}.vctl{gap:6px}.vseekw{order:9;flex-basis:100%}.vtime{min-width:0}.vgo{width:62px;height:62px}.vgo svg{width:26px;height:26px}.vcap{font-size:1rem}}
+
 </style>
 </head>
 <body>
@@ -1112,6 +1152,281 @@ window.FIGS = (function () {
     return p.out(580, 450, 'Case study elevation: a 144-inch frameless sink wall with cabinet codes and a centered window');
   };
 
+  /* ---------- Animated video lessons: engine ---------- */
+  const VIDS = [];
+  const vcl = v => v < 0 ? 0 : v > 1 ? 1 : v;
+  const vez = v => v < .5 ? 2 * v * v : 1 - Math.pow(-2 * v + 2, 2) / 2;
+  const v2 = v => Math.round(v * 100) / 100;
+  const vlp = (a, b, p) => a + (b - a) * p;
+  const vop = (o, s) => o >= .999 ? s : o <= .001 ? '' : `<g opacity="${v2(o)}">${s}</g>`;
+  const vmv = (dx, dy, s) => Math.abs(dx) < .05 && Math.abs(dy) < .05 ? s : `<g transform="translate(${v2(dx)} ${v2(dy)})">${s}</g>`;
+  const vrot = (a, cx, cy, s) => Math.abs(a) < .05 ? s : `<g transform="rotate(${v2(a)} ${v2(cx)} ${v2(cy)})">${s}</g>`;
+  const vtx = (x, y, t, c = 't', a = 'middle') => `<text x="${v2(x)}" y="${v2(y)}" class="${c}" text-anchor="${a}">${E(t)}</text>`;
+  const vpl = (pts, c = 'o') => `<polyline points="${pts.map(q => v2(q[0]) + ',' + v2(q[1])).join(' ')}" class="${c}" fill="none"/>`;
+  const vpg = (pts, c) => `<polygon points="${pts.map(q => v2(q[0]) + ',' + v2(q[1])).join(' ')}" class="${c}"/>`;
+  const vwords = s => s.split(/\s+/).filter(Boolean).length;
+  const vXY = (s, ox, oy, fl) => [x => ox + x * s, y => fl == null ? oy + y * s : oy + (fl - y) * s];
+  const vPad = (s, ox, oy, fl) => f => { const p = Pad(s, ox, oy, fl); f(p); return p.o.join(''); };
+  function vpart(pts, p) {
+    if (p >= 1) return pts;
+    const seg = []; let L = 0;
+    for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(l); L += l; }
+    let rem = L * Math.max(0, p); const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      if (rem >= seg[i - 1]) { out.push(pts[i]); rem -= seg[i - 1]; }
+      else { const f = seg[i - 1] ? rem / seg[i - 1] : 0; out.push([vlp(pts[i - 1][0], pts[i][0], f), vlp(pts[i - 1][1], pts[i][1], f)]); break; }
+    }
+    return out;
+  }
+  /* Each step shows a caption (c) and speaks s (or c). Each element appears at step `at`,
+     animates over `ln` of that step after a delay `dl`, and fades out at step `un`. */
+  function video(d) {
+    let T = 0;
+    d.steps.forEach(st => { st.dur = st.d || Math.max(4.5, vwords(st.s || st.c) / 2.6 + 1.6); st.t0 = T; T += st.dur; });
+    d.total = T;
+    d.frame = t => {
+      const S = d.steps, c = { t };
+      c.lin = (k, dl = 0, ln = .5) => vcl((t - S[k].t0 - dl * S[k].dur) / (ln * S[k].dur));
+      c.p = (k, dl, ln) => vez(c.lin(k, dl, ln));
+      c.in = k => t >= S[k].t0 && (k + 1 >= S.length || t < S[k + 1].t0);
+      let b = '';
+      d.els.forEach(el => {
+        const st = S[el.at], start = st.t0 + (el.dl || 0) * st.dur;
+        if (t < start) return;
+        let o = 1;
+        if (el.un != null) { const u = S[el.un]; if (t >= u.t0 + .3 * u.dur) return; if (t > u.t0) o = 1 - (t - u.t0) / (.3 * u.dur); }
+        b += vop(o, el.f(vez(vcl((t - start) / ((el.ln || .5) * st.dur))), c));
+      });
+      return svg(d.w, d.h, b, d.title, 'vfig');
+    };
+    VIDS.push(d);
+  }
+  const vclip = () => { const els = []; return { els, add: (at, f, o) => { els.push(Object.assign({ at, f }, o || {})); } }; };
+
+  /* ---------- Video: assembling a frameless base cabinet (isometric) ---------- */
+  (() => {
+    const { els, add } = vclip(), s = 5.2, ox = 330, oy = 222, C = 0.866, W = 24, H = 30, D = 23.25, T = 0.75;
+    const P = (x, y, z) => [ox + (x - z) * C * s, oy - y * s + (x + z) * 0.5 * s];
+    const box = (x, y, z, w, h, d, hl) => { const k = hl ? 'h' : ''; return vpg([P(x, y + h, z), P(x + w, y + h, z), P(x + w, y + h, z + d), P(x, y + h, z + d)], 'vt' + k) + vpg([P(x, y, z + d), P(x + w, y, z + d), P(x + w, y + h, z + d), P(x, y + h, z + d)], 'vf' + k) + vpg([P(x + w, y, z), P(x + w, y, z + d), P(x + w, y + h, z + d), P(x + w, y + h, z)], 'vs' + k); };
+    const lab = (x, y, z, t, a) => { const q = P(x, y, z); return vtx(q[0], q[1], t, 'ta', a || 'middle'); };
+    const xl = c => -8 * (1 - c.p(2, 0, .5));
+    [[2, 2], [20.5, 2], [2, D - 5], [20.5, D - 5]].forEach(([x, z]) => add(5, (e, c) => vop(e, box(x, -4.5 - 5 * (1 - c.p(5, .12, .4)), z, 1.5, 4.5, 1.5)), { ln: .12 }));
+    add(5, (e, c) => vop(e, box(T, -4.25, D - 3.75 + 7 * (1 - c.p(5, .55, .35)), W - 2 * T, 4, T)), { dl: .42, ln: .12 });
+    add(0, (e, c) => vop(e, box(T, T, -9 * (1 - c.p(3, 0, .55)), W - 2 * T, H - T, .5, c.in(3))), { ln: .3 });
+    add(0, (e, c) => vop(e, box(xl(c), 0, 0, T, H, D, c.in(1))), { ln: .3 });
+    add(1, (e, c) => { const dx = xl(c); let b = ''; [D - 1.46, D - 19.1].forEach(z => { for (let y = 2.52; y < 29; y += 1.26) { const q = P(dx + T, y, z); b += `<ellipse cx="${v2(q[0])}" cy="${v2(q[1])}" rx="1.3" ry=".9" class="inkf"/>`; } }); return vop(e, b); }, { dl: .25, ln: .35 });
+    add(0, (e, c) => vop(e, box(T, -8 * (1 - c.p(2, .25, .5)), .5, W - 2 * T, T, D - .5)), { ln: .3 });
+    add(6, (e, c) => vop(e, box(T + .06, 14.25, 1 + 14 * (1 - c.p(6, .1, .55)), W - 2 * T - .12, T, D - 2, c.in(6))), { ln: .12 });
+    add(0, (e, c) => vop(e, box(T, H - T + 8 * (1 - c.p(4, 0, .5)), .5, W - 2 * T, T, 4)), { ln: .3 });
+    add(0, (e, c) => vop(e, box(T, H - T + 8 * (1 - c.p(4, .15, .5)), D - 4, W - 2 * T, T, 4)), { ln: .3 });
+    add(0, (e, c) => vop(e, box(W - T + 8 * (1 - c.p(2, 0, .5)), 0, 0, T, H, D, c.in(1))), { ln: .3 });
+    add(7, (e, c) => {
+      const zf = D + .05 + T + 9 * (1 - c.p(7, .05, .55)), x0 = .0625, dw = W - .125, dh = 29.875, th = c.p(8, .1, .6) * 100 * Math.PI / 180;
+      const pt = (u, v) => P(x0 + u * Math.cos(th), v, zf + u * Math.sin(th)), k = pt(dw - 1.8, 27);
+      const knob = `<ellipse cx="${v2(k[0])}" cy="${v2(k[1])}" rx="2.1" ry="1.5" class="inkf"/>`;
+      return vop(e, (th < .002 ? box(x0, 0, zf - T, dw, dh, T, c.in(7)) : vpg([pt(0, 0), pt(dw, 0), pt(dw, dh), pt(0, dh)], 'vf')) + knob);
+    }, { ln: .2 });
+    add(0, e => vop(e, lab(-8.4, 33.5, 11.6, 'Side') + lab(32.4, 33.5, 11.6, 'Side') + lab(26, 24, -9, 'Back', 'start') + lab(27, 38.5, 0, 'Rails', 'start') + lab(-4, -9, 20, 'Bottom', 'end')), { dl: .3, ln: .15, un: 1 });
+    add(1, e => vop(e, lab(-9.5, 20, 23.25, '5 mm system holes', 'end')), { dl: .45, ln: .15, un: 2 });
+    add(5, e => vop(e, lab(-2, -9, 20, 'Adjustable legs', 'end') + lab(25, -5.5, 21, 'Clip-on toe kick', 'start')), { dl: .6, ln: .12, un: 6 });
+    add(7, e => vop(e, lab(-3, -4, D + 1, 'Full-overlay door', 'end')), { dl: .45, ln: .15, un: 8 });
+    video({ id: 'cfAssembly', title: 'Assembling a frameless base cabinet', mod: 6, lesson: 'cf2', w: 640, h: 420, els, steps: [
+      { c: 'A frameless base cabinet starts as flat panels, cut and bored on CNC machines: two sides, a bottom, a back and two rails.' },
+      { c: 'The sides, called gables, carry everything. Their rows of 5 mm system holes will take shelf pins, hinge plates and drawer runners.', s: 'The sides, called gables, carry everything. Their rows of five millimeter system holes will take shelf pins, hinge plates and drawer runners.' },
+      { c: 'The bottom joins the sides with glue and dowels, commonly 8 mm, or with confirmat screws.', s: 'The bottom joins the sides with glue and dowels, commonly eight millimeter, or with confirmat screws.' },
+      { c: 'The back squares the box. A thin back slides into grooves; a thicker back is screwed on.' },
+      { c: 'Base cabinets get front and rear rails instead of a full top, so the countertop can be fastened and plumbing can pass through.' },
+      { c: 'Adjustable legs replace a built-in toe kick, which makes leveling on an uneven floor quick. The kick board clips on afterward.' },
+      { c: 'Adjustable shelves rest on 5 mm pins and move in 32 mm steps.', s: 'Adjustable shelves rest on five millimeter pins and move in thirty-two millimeter steps.' },
+      { c: 'Last comes the full-overlay door, which covers the front edges of the box with a 1/16-inch reveal all around.', s: 'Last comes the full-overlay door, which covers the front edges of the box with a one-sixteenth inch reveal all around.' },
+      { c: 'Open it, and the whole width is usable: no face frame and no stiles in the way.' }
+    ] });
+  })();
+
+  /* ---------- Video: the 32 mm system ---------- */
+  (() => {
+    const { els, add } = vclip(), M = vPad(.43, 70, 42, 720), I = vPad(2.9, 380, 52, 100), [X, Y] = vXY(.43, 70, 42, 720);
+    const row = k => 656 - 32 * k;
+    const edge = [[X(0), Y(0)], [X(560), Y(0)], [X(560), Y(720)], [X(0), Y(720)], [X(0), Y(0)]];
+    add(0, e => vop(vcl(e * 1.6 - .6), M(p => p.rect(0, 0, 560, 720, 'cab'))) + vpl(vpart(edge, e), 'o'), { ln: .45 });
+    add(0, e => vop(e, M(p => p.text(280, 740, 'Cabinet side (gable), 560 × 720 mm', 't'))), { dl: .3, ln: .2, un: 7 });
+    add(0, e => vpl(vpart([[X(0), Y(720)], [X(0), Y(0)]], e), 'acc') + vop(e, M(p => p.text(-16, 360, 'Front edge', 'ta', 'middle', -90))), { dl: .5, ln: .3 });
+    add(1, e => vpl(vpart([[X(37), Y(700)], [X(37), Y(20)]], e), 'cl'), { ln: .4 });
+    add(1, e => vop(e, M(p => p.rect(0, 570, 70, 100, 'accd').text(80, 676, 'Detail', 'ta', 'start'))), { dl: .2, ln: .3 });
+    add(1, e => vop(e, I(p => { p.rect(0, 0, 70, 100, 'cab').rect(-2.4, 0, 2.4, 100, 'inkf').line(37, -4, 37, 104, 'cl'); p.text(35, -12, 'Detail at the front edge', 't'); })), { dl: .3, ln: .35 });
+    add(1, e => vop(e, I(p => p.hdim(0, 37, 108, '37 mm', 100))), { dl: .5, ln: .3 });
+    add(2, (e, c) => { const u = c.lin(2, .05, .8); let b = ''; for (let k = 0; k < 18; k++) if (u >= k / 17 - 1e-6) b += M(p => p.circ(37, row(k), 5.5, 'inkf')); return b; }, { ln: .05 });
+    add(2, (e, c) => { const u = c.lin(2, .05, .8); if (u >= 1) return ''; const y = vlp(row(0), row(17), u); return M(p => p.circ(37, y, 16, 'acc').line(37, y - 26, 37, y + 26, 'o').line(11, y, 63, y, 'o')); }, { ln: .05 });
+    add(2, (e, c) => { const u = c.lin(2, .05, .8); let b = ''; [0, 1, 2].forEach(k => { if (u >= k / 17 - 1e-6) b += I(p => p.circ(37, row(k) - 570, 2.5, 'sheetf')); }); return b; }, { ln: .05 });
+    add(2, e => vop(e, I(p => p.vdim(22, 54, 58, '32 mm', 42).text(43, 94, 'Ø 5 mm', 'td', 'start'))), { dl: .5, ln: .3 });
+    add(3, (e, c) => { const u = c.lin(3, .05, .6); let b = ''; for (let k = 0; k < 18; k++) if (u >= k / 17 - 1e-6) b += M(p => p.circ(485, row(k), 5.5, 'inkf')); return b; }, { ln: .05 });
+    add(3, e => vop(e, M(p => p.hdim(37, 485, -40, '448 mm = 14 × 32 mm', 0))), { dl: .55, ln: .3 });
+    [608, 128].forEach((cy, i) => add(4, e => vmv(-(1 - e) * 60, 0, vop(e, M(p => p.rect(30, cy - 24, 14, 48, 'app').circ(37, cy - 16, 4, 'o').circ(37, cy + 16, 4, 'o')))), { dl: .1 + i * .15, ln: .4 }));
+    add(4, e => vmv(-(1 - e) * 150, 0, vop(e, I(p => p.rect(30, 14, 14, 48, 'app').circ(37, 22, 2.5, 'o').circ(37, 54, 2.5, 'o')))), { dl: .1, ln: .4 });
+    add(4, e => vop(e, M(p => p.text(70, 600, 'Hinge plate', 'ts', 'start').text(70, 120, 'Hinge plate', 'ts', 'start'))), { dl: .45, ln: .25 });
+    add(5, e => vmv(-(1 - e) * 120, 0, vop(e, M(p => p.rect(14, 392, 520, 16, 'app').circ(37, 400, 4.5, 'o').circ(485, 400, 4.5, 'o').text(260, 422, 'Drawer runner', 'ts')))), { dl: .1, ln: .45 });
+    add(6, (e, c) => { const v = c.lin(6, .15, .75) * 2, f = Math.floor(Math.min(v, 1.999)), yh = 272 + 32 * (f + vez(vcl((v - f) * 2))); return vop(e, M(p => p.rect(12, yh + 4, 536, 19, 'vfh').circ(37, yh, 5, 'bluef').circ(485, yh, 5, 'bluef'))); }, { ln: .15 });
+    add(6, e => vop(e, M(p => p.text(280, 238, 'Shelf moves in 32 mm steps', 'ta'))), { dl: .3, ln: .25 });
+    add(7, e => vop(e, M(p => p.text(280, 740, 'One grid, any brand: plates, runners, shelf pins', 'ta'))), { dl: .25, ln: .25 });
+    video({ id: 'sys32v', title: 'The 32 mm system, hole by hole', mod: 6, lesson: 'cf3', w: 640, h: 400, els, steps: [
+      { c: 'This is the side of a frameless cabinet, 560 mm deep and 720 mm tall. Every hole in it is located from the front edge.', s: 'This is the side of a frameless cabinet, five hundred sixty millimeters deep and seven hundred twenty tall. Every hole in it is located from the front edge.' },
+      { c: 'The front row of holes sits on a line 37 mm back from that edge.', s: 'The front row of holes sits on a line thirty-seven millimeters back from that edge.' },
+      { c: 'A boring machine drills 5 mm holes down the line, each one 32 mm from the last.', s: 'A boring machine drills five millimeter holes down the line, each one thirty-two millimeters from the last.' },
+      { c: 'The rear row is drilled the same way, a multiple of 32 mm behind the front row.', s: 'The rear row is drilled the same way, a multiple of thirty-two millimeters behind the front row.' },
+      { c: 'Hinge mounting plates screw into two holes on the front row, so every standard hinge lands in the same place.' },
+      { c: 'Drawer runners screw into the front row and a hole farther back.' },
+      { c: 'Shelf pins fit any pair of holes, so a shelf moves in 32 mm steps, about an inch and a quarter.', s: 'Shelf pins fit any pair of holes, so a shelf moves in thirty-two millimeter steps, about an inch and a quarter.' },
+      { c: 'Because every maker drills the same grid, hinges, runners and shelf hardware from different brands fit the same cabinet.' }
+    ] });
+  })();
+
+  /* ---------- Video: boring, hanging and adjusting a cup-hinge door ---------- */
+  (() => {
+    const { els, add } = vclip(), s = 1.9, PL = vPad(s, 170, 30, 60), [X, Y] = vXY(s, 170, 30, 60), EL = vPad(6.2, 170, 64, 36);
+    const px = X(3), py = Y(-20);
+    const door = (c, str) => { const off = -16 * (1 - c.p(4, .1, .5)), ang = c.p(5, .1, .6) * 110; return vrot(ang, px, py, vmv(0, -off * s, str)); };
+    const expl = (p, dx, dy, str) => vmv((1 - p) * dx * s, -(1 - p) * dy * s, str);
+    add(0, e => vop(e, PL(p => p.rect(0, 0, 19, 60, 'cab').text(9.5, 48, 'Side', 't').text(52, 50, 'Cabinet interior', 'ts'))), { ln: .3, un: 6 });
+    add(0, (e, c) => door(c, vop(e, PL(p => { p.rect(3, -20, 110, 19, 'cab'); p.poly([[113, -23], [116, -15], [110, -6], [113, 2]], 'o', false); p.text(80, -12.5, 'Door', 't'); }))), { ln: .3, un: 6 });
+    add(1, (e, c) => { const d = 13 * c.p(1, .15, .45); return d < .05 ? '' : door(c, PL(p => p.rect(8, -1 - d, 35, d, 'sheetf'))); }, { ln: .05, un: 6 });
+    add(1, (e, c) => { const u = c.lin(1, 0, .7); if (u >= 1) return ''; const dn = u < .6 ? vez(u / .6) : 1 - vez((u - .6) / .4); return door(c, PL(p => p.rect(12, 30 - 44 * dn, 27, 40, 'app'))); }, { ln: .05 });
+    add(1, (e, c) => door(c, vop(e, PL(p => { p.hdim(8, 43, -30, '35 mm cup', -20); p.line(5.5, -20.5, -3, -33, 'o').text(-4, -36, 'Boring distance', 'ts', 'end'); }))), { dl: .5, ln: .3, un: 5 });
+    add(0, (e, c) => door(c, expl(c.p(2, .1, .55), 150, 50, vop(e, PL(p => p.rect(8, -14, 35, 13, 'vfh'))))), { dl: .2, ln: .3, un: 6 });
+    add(0, (e, c) => door(c, expl(c.p(2, .1, .55), 150, 50, vop(e, PL(p => p.poly([[25.5, -1], [25.5, 14], [24, 31]], 'o2', false))))), { dl: .2, ln: .3, un: 5 });
+    add(0, (e, c) => expl(c.p(3, .1, .55), 190, 0, vop(e, PL(p => p.rect(19, 29, 9, 16, 'app')))), { dl: .3, ln: .3, un: 6 });
+    add(0, e => vop(e, PL(p => p.text(175.5, 10, 'Cup and arm', 'ta').text(213.5, 20, 'Mounting plate', 'ta'))), { dl: .4, ln: .2, un: 2 });
+    add(3, e => vop(e, PL(p => p.vdim(0, 37, -9, '37 mm', 0))), { dl: .5, ln: .3, un: 5 });
+    add(5, (e, c) => { const a = c.p(5, .1, .6) * 110, r = 58, pts = []; for (let i = 0; i <= 24; i++) { const t = a * i / 24 * Math.PI / 180; pts.push([px + r * Math.cos(t), py + r * Math.sin(t)]); } const m = (a / 2) * Math.PI / 180; return vop(e, vpl(pts, 'accd') + (a > 8 ? vtx(px + (r + 18) * Math.cos(m), py + (r + 18) * Math.sin(m) + 4, Math.round(a) + '°', 'ta') : '')); }, { ln: .1, un: 6 });
+    add(6, e => vop(e, EL(p => { p.rect(0, 0, 30, 4.5, 'wall').rect(0, 4.5, 15, 30, 'o').rect(15, 4.5, 15, 30, 'o').rect(-.5, 34.5, 31, 1.5, 'ctr').rect(.0625, 4.5, 14.875, 29.875, 'cab').circ(13.3, 31.4, .45, 'inkf'); })), { dl: .15, ln: .35 });
+    add(6, (e, c) => { const dx = .55 * (1 - c.p(7, .15, .5)), dy = -.45 * (1 - c.p(8, .1, .5)); return vop(e, EL(p => p.rect(15.0625 + dx, 4.5 + dy, 14.875, 29.875, 'cab').circ(16.7 + dx, 31.4 + dy, .45, 'inkf'))); }, { dl: .3, ln: .35 });
+    add(6, e => vop(e, EL(p => p.line(15.9, 20.8, 32.6, 20.8, 'o').text(33, 20, 'Gap too wide', 'ta', 'start'))), { dl: .6, ln: .2, un: 7 });
+    add(6, e => vop(e, EL(p => p.line(0, 34.375, 32.6, 34.375, 'accd').text(33, 33.7, 'Top edge too low', 'ta', 'start'))), { dl: .7, ln: .2, un: 8 });
+    add(7, (e, c) => { const a = c.lin(7, .1, .6) * 720; return vop(e, EL(p => p.circ(28.6, 30, .75, 'sheetf').text(33, 26, 'Side-adjustment screw', 'ts', 'start')) + vrot(a, 170 + 28.6 * 6.2, 64 + 6 * 6.2, EL(p => p.line(27.95, 30, 29.25, 30, 'o2')))); }, { ln: .2, un: 8 });
+    add(7, e => vop(e, EL(p => p.line(15.3, 20.8, 32.6, 20.8, 'o').text(33, 20, 'Even ⅛" gap', 'ta', 'start'))), { dl: .7, ln: .2 });
+    add(8, e => vop(e, EL(p => p.line(0, 34.375, 32.6, 34.375, 'accd').text(33, 33.7, 'Tops line up', 'ta', 'start'))), { dl: .55, ln: .2 });
+    video({ id: 'hingeV', title: 'Boring, hanging and adjusting a cup-hinge door', mod: 6, lesson: 'cf4', w: 640, h: 400, els, steps: [
+      { c: 'A concealed hinge has three parts: a cup that sits in the door, an arm, and a mounting plate on the cabinet side.' },
+      { c: 'First, a 35 mm cup hole is bored into the back of the door, a few millimeters in from its edge. That gap is the boring distance.', s: 'First, a thirty-five millimeter cup hole is bored into the back of the door, a few millimeters in from its edge. That gap is the boring distance.' },
+      { c: 'The hinge cup presses into the hole, with the arm attached.' },
+      { c: 'The mounting plate screws to the cabinet side on the front row of system holes, 37 mm back from the front edge.', s: 'The mounting plate screws to the cabinet side on the front row of system holes, thirty-seven millimeters back from the front edge.' },
+      { c: 'Clip the arm onto the plate, and the door is hung.' },
+      { c: 'A standard hinge opens the door about 110 degrees.' },
+      { c: 'Now look at the doors from the front. Neighboring doors should show an even 1/8-inch gap, and this one is off.', s: 'Now look at the doors from the front. Neighboring doors should show an even one-eighth inch gap, and this one is off.' },
+      { c: 'Turn the side-adjustment screw, and the door moves sideways until the gap is even.' },
+      { c: 'The height and depth adjustments line up the top edges and faces. Every reveal is now even.' }
+    ] });
+  })();
+
+  /* ---------- Video: sizing frameless doors and drawer fronts ---------- */
+  (() => {
+    const { els, add } = vclip(), A = vPad(6.6, 60, 40, 38), DT = vPad(80, 470, 60, 1.6);
+    const tl = (y, t, c) => vtx(345, y, t, c || 'vmid', 'start');
+    add(0, e => vop(e, A(p => p.rect(0, 0, 36, 4.5, 'wall').rect(0, 4.5, 36, 30, 'o').rect(-.5, 34.5, 37, 1.5, 'ctr'))), { ln: .35, un: 5 });
+    add(0, e => vop(e, A(p => p.hdim(0, 36, -5, '36" box', 0).vdim(4.5, 34.5, 40, '30" face', 36).vdim(0, 4.5, 40, '4½"', 36))), { dl: .35, ln: .3, un: 5 });
+    add(1, e => vop(e, DT(p => { p.rect(-.75, 0, .75, 1.5, 'cab').rect(0, 0, .75, 1.5, 'cab').rect(-1.3, -.8, 1.2375, .75, 'vfh').rect(.0625, -.8, 1.2375, .75, 'vfh'); p.hdim(-.0625, .0625, -1.15, '⅛" gap', -.8); p.text(0, 1.78, '1/16" back from each box edge', 'ts'); p.text(0, -1.6, 'Plan detail where two cabinets meet', 't'); })), { dl: .1, ln: .35, un: 2 });
+    add(2, e => vop(e, tl(150, 'A pair of doors:') + tl(186, '(36 − ¼) ÷ 2', 'vbig')), { dl: .1, ln: .25, un: 5 });
+    add(3, e => vop(e, A(p => { p.rect(.0625, 4.5, 17.875, 29.875, 'cab').rect(18.0625, 4.5, 17.875, 29.875, 'cab'); swingV(p, .0625, 17.9375, 4.5, 34.375); swingV(p, 35.9375, 18.0625, 4.5, 34.375); p.circ(16.3, 31.8, .45, 'inkf').circ(19.7, 31.8, .45, 'inkf'); })), { dl: .05, ln: .35, un: 5 });
+    add(3, e => vop(e, A(p => p.hdim(.0625, 17.9375, 38, '17⅞"', 34.375).hdim(18.0625, 35.9375, 38, '17⅞"', 34.375)) + tl(226, '= 17⅞" each', 'vbig')), { dl: .4, ln: .3, un: 5 });
+    add(4, e => vop(e, A(p => p.vdim(4.5, 34.375, -3, '29⅞"', 0)) + tl(272, 'Height: 30 − ⅛ = 29⅞"')), { dl: .3, ln: .3, un: 5 });
+    add(5, e => vop(e, A(p => p.rect(9, 0, 18, 4.5, 'wall').rect(9, 4.5, 18, 30, 'o').rect(8.5, 34.5, 19, 1.5, 'ctr').hdim(9, 27, -5, '18" box', 0).vdim(4.5, 34.5, 33, '30" face', 27))), { dl: .3, ln: .35 });
+    add(6, e => vop(e, tl(120, 'Four equal fronts:') + tl(156, '30 − ⅛ − 3 × ⅛', 'vbig') + tl(191, '= 29½"', 'vbig')), { dl: .15, ln: .3 });
+    [0, 1, 2, 3].forEach(i => add(7, e => { const top = 34.375 - i * 7.5, y0 = top - 7.375; return vmv(0, -(1 - e) * 36, vop(e, A(p => p.rect(9.0625, y0, 17.875, 7.375, 'cab').rect(16, y0 + 3.4, 4, .5, 'inkf').vdim(y0, top, 29.5, '7⅜"', 27)))); }, { dl: .08 + i * .12, ln: .25 }));
+    add(7, e => vop(e, tl(236, '29½ ÷ 4 = 7⅜" each', 'vbig')), { dl: .6, ln: .25 });
+    add(8, e => vop(e, tl(292, 'In metric, a 600 mm pair of doors:') + tl(327, '(600 − 6) ÷ 2', 'vbig') + tl(361, '= 297 mm each', 'vbig')), { dl: .15, ln: .3 });
+    video({ id: 'frontsV', title: 'Sizing frameless doors and drawer fronts', mod: 6, lesson: 'cf5', w: 640, h: 400, els, steps: [
+      { c: 'Here is a 36-inch frameless sink base: 34-1/2 inches tall on a 4-1/2-inch toe kick, which leaves 30 inches of face.', s: 'Here is a thirty-six inch frameless sink base: thirty-four and a half inches tall on a four and a half inch toe kick, which leaves thirty inches of face.' },
+      { c: 'Frameless fronts stop 1/16 inch short of every box edge, so neighboring cabinets end up 1/8 inch apart.', s: 'Frameless fronts stop one-sixteenth of an inch short of every box edge, so neighboring cabinets end up one-eighth of an inch apart.' },
+      { c: 'For a pair of doors, subtract a quarter inch from the box width, then divide by two.' },
+      { c: 'Each door is 17-7/8 inches wide.', s: 'Each door is seventeen and seven-eighths inches wide.' },
+      { c: 'Door height is the face height minus the 1/8-inch reveal under the counter: 29-7/8 inches.', s: 'Door height is the face height minus the one-eighth inch reveal under the counter: twenty-nine and seven-eighths inches.' },
+      { c: 'Now an 18-inch drawer base with four equal drawers. Start with the same 30 inches of face.', s: 'Now an eighteen inch drawer base with four equal drawers. Start with the same thirty inches of face.' },
+      { c: 'Subtract the 1/8-inch reveal at the top and the three 1/8-inch gaps between fronts. That leaves 29-1/2 inches.', s: 'Subtract the one-eighth inch reveal at the top and the three one-eighth inch gaps between fronts. That leaves twenty-nine and a half inches.' },
+      { c: 'Divide by four, and each front is 7-3/8 inches tall.', s: 'Divide by four, and each front is seven and three-eighths inches tall.' },
+      { c: 'The same math works in metric: a 600 mm pair of doors is 297 mm per door.', s: 'The same math works in metric: a six hundred millimeter pair of doors is two hundred ninety-seven millimeters per door.' }
+    ] });
+  })();
+
+  /* ---------- Video: face-frame doors, overlay versus inset ---------- */
+  (() => {
+    const { els, add } = vclip(), F2 = vPad(10, 70, 30, 26), PN = vPad(10, 70, 350), R = .28;
+    const tl = (y, t, c) => vtx(330, y, t, c || 'vmid', 'start');
+    const frame = p => { [[0, 0, 1.5, 23.5], [14.25, 0, 1.5, 23.5], [1.5, 0, 12.75, 1.5], [1.5, 22, 12.75, 1.5]].forEach(r => p.rect(r[0], r[1], r[2], r[3], 'cab')); p.rect(1.5, 1.5, 12.75, 20.5, 'sheetf'); };
+    add(0, e => vop(e, F2(frame)), { ln: .35 });
+    add(0, e => vop(e, F2(p => p.hdim(1.5, 14.25, -3.2, '12¾" opening', 0).vdim(1.5, 22, -3, '20½"', 0))), { dl: .35, ln: .3 });
+    add(1, e => vop(e, PN(p => { p.rect(0, 0, 1.5, .75, 'cab').rect(14.25, 0, 1.5, .75, 'cab').rect(.25, .75, .5, 2.2, 'cab').rect(15, .75, .5, 2.2, 'cab'); p.text(-1, .7, 'Plan', 'ts', 'end'); })), { ln: .3 });
+    add(1, (e, c) => { const k = c.p(1, .25, .5); return vop(e, F2(p => p.rect(1.5 - .5 * k, 1.5 - .5 * k, 12.75 + k, 20.5 + k, 'vfh')) + PN(p => p.rect(1.5 - .5 * k, -.8, 12.75 + k, .75, 'vfh'))); }, { dl: .15, ln: .1, un: 3 });
+    add(1, e => vop(e, tl(110, 'Overlay: opening + 2 × overlay')), { dl: .2, ln: .25, un: 3 });
+    add(2, e => vop(e, F2(p => p.hdim(1, 14.75, 25, '13¾"', 22.5).vdim(1, 22.5, 18, '21½"', 14.75)) + tl(150, '12¾ + 1 = 13¾"', 'vbig') + tl(186, '20½ + 1 = 21½"', 'vbig')), { dl: .15, ln: .3, un: 3 });
+    add(3, (e, c) => { const k = c.p(3, .3, .5) * R; return vop(e, F2(p => p.rect(1.5 + k, 1.5 + k, 12.75 - 2 * k, 20.5 - 2 * k, 'vfh')) + PN(p => p.rect(1.5 + k, 0, 12.75 - 2 * k, .75, 'vfh').rect(1.5, .75, .45, .4, 'app').rect(13.8, .75, .45, .4, 'app'))); }, { dl: .25, ln: .1 });
+    add(3, e => vop(e, tl(110, 'Inset: opening − 2 × reveal') + vtx(330, 300, 'Reveals drawn larger than scale', 'ts', 'start')), { dl: .3, ln: .25 });
+    add(4, e => vop(e, F2(p => p.hdim(1.5 + R, 14.25 - R, 25, '12-9/16"', 22 - R).vdim(1.5 + R, 22 - R, 18, '20-5/16"', 14.25 - R)) + tl(150, '12¾ − 3/16 = 12-9/16"', 'vbig') + tl(186, '20½ − 3/16 = 20-5/16"', 'vbig')), { dl: .2, ln: .3 });
+    add(5, e => vop(e, tl(236, 'Inset needs stable doors, precise') + tl(259, 'fitting and door stops.') + PN(p => p.text(7.9, 2.6, 'Door stops', 'ts'))), { dl: .15, ln: .3 });
+    video({ id: 'ffV', title: 'Face-frame doors: overlay versus inset', mod: 7, lesson: 'cp2', w: 640, h: 400, els, steps: [
+      { c: 'Face-frame fronts are sized from the frame opening, not the box. This opening is 12-3/4 inches wide and 20-1/2 inches tall.', s: 'Face-frame fronts are sized from the frame opening, not the box. This opening is twelve and three-quarter inches wide and twenty and a half inches tall.' },
+      { c: 'For a partial-overlay door, add the overlay on every side. A half-inch overlay adds one inch in each direction.' },
+      { c: 'The door is 13-3/4 by 21-1/2 inches, and it covers half an inch of frame on every side.', s: 'The door is thirteen and three-quarters by twenty-one and a half inches, and it covers half an inch of frame on every side.' },
+      { c: 'An inset door works the other way. It sits inside the opening, flush with the frame, so you subtract the reveal instead.' },
+      { c: 'With a 3/32-inch reveal on every side, the inset door is 12-9/16 by 20-5/16 inches.', s: 'With a three thirty-seconds inch reveal on every side, the inset door is twelve and nine-sixteenths by twenty and five-sixteenths inches.' },
+      { c: 'That precision is why inset costs more: it needs stable doors, careful fitting and stops to land the doors flush.' }
+    ] });
+  })();
+
+  /* ---------- Video: field measuring a kitchen ---------- */
+  (() => {
+    const { els, add } = vclip(), RM = vPad(2.2, 40, 80), [X, Y] = vXY(2.2, 40, 80), WE = vPad(1.5, 400, 64, 96);
+    const wob = pts => { const out = []; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; out.push(a); for (let j = 1; j < 5; j++) { const f = j / 5, w = Math.sin((i * 5 + j) * 1.9) * 1.3; out.push([vlp(a[0], b[0], f) - (b[1] - a[1]) / L * w, vlp(a[1], b[1], f) + (b[0] - a[0]) / L * w]); } } out.push(pts[pts.length - 1]); return out; };
+    const walls = wob([[128, 120], [144, 120], [144, 0], [0, 0], [0, 120], [90, 120]].map(q => [X(q[0]), Y(q[1])]));
+    add(0, e => vpl(vpart(walls, e), 'o2'), { ln: .55 });
+    add(0, e => vop(e, RM(p => { p.rect(36, -1.6, 48, 3.2, 'sheetf'); p.text(72, -26, 'A', 'ta').text(154, 62, 'B', 'ta').text(72, 136, 'C', 'ta').text(-10, 62, 'D', 'ta'); })), { dl: .5, ln: .3 });
+    add(1, e => vop(e, WE(p => { p.rect(0, 0, 144, 96, 'o').rect(36, 42, 48, 42, 'sheetf'); p.text(72, 101, 'Wall A, elevation', 't'); })), { ln: .3 });
+    [[90, '143⅞"'], [36, '144"'], [4, '144¼"']].forEach(([h, t], i) => add(1, e => { const [x0, y0] = [400, 64 + (96 - h) * 1.5]; return vpl(vpart([[x0, y0], [x0 + 216, y0]], e), 'acc') + vop(vcl(e * 2 - 1), vtx(x0 + 184, h > 80 ? y0 + 14 : y0 - 5, t, 'ta')); }, { dl: .2 + i * .15, ln: .3 }));
+    add(1, e => vop(e, vtx(508, 238, 'Record the smallest: 143⅞"', 'ta')), { dl: .7, ln: .2 });
+    add(2, e => vpl(vpart([[X(0), Y(-10)], [X(144), Y(-10)]], e), 'o') , { ln: .45 });
+    [[36, '36'], [60, '60 sink CL'], [84, '84'], [144, '144']].forEach(([x, t], i) => add(2, e => vop(e, RM(p => p.line(x, -13, x, -7, 'o2').text(x, -15, t, 'ts'))), { dl: .15 + i * .1, ln: .2 }));
+    add(3, e => vop(e, RM(p => { p.line(125, 120, 125, 88, 'o'); p.hdim(90, 128, 128, '38" outside of casings', 120); })) + vpl(vpart(Array.from({ length: 13 }, (_, i) => { const a = Math.PI + i / 12 * Math.PI / 2; return [X(125 + 32 * Math.cos(a)), Y(120 + 32 * Math.sin(a))]; }), e), 'hid'), { dl: .1, ln: .4 });
+    add(4, e => vop(e, RM(p => { p.circ(60, 4, 1.8, 'inkf').text(60, 12, 'Drain', 'ts'); p.circ(140, 50, 2.6, 'o').text(140, 51.6, 'G', 'ts').text(134, 51.6, 'Gas', 'ts', 'end'); [[100, 2.5], [2.5, 84], [141.5, 96]].forEach(q => p.circ(q[0], q[1], 1.6, 'o')); p.text(7, 85.5, 'Receptacle', 'ts', 'start'); p.rect(14, 114, 12, 3, 'app').text(20, 110, 'Vent', 'ts'); })), { dl: .1, ln: .4 });
+    add(5, e => vop(e, RM(p => p.line(36, -3, 36, 3, 'acc').line(-3, 48, 3, 48, 'acc').text(18, 7, '36"', 'ts').text(5, 26, '48"', 'ts', 'start'))), { dl: .05, ln: .25 });
+    add(5, e => vpl(vpart([[X(36), Y(0)], [X(0), Y(48)]], e), 'acc') + vop(vcl(e * 2 - 1), RM(p => p.text(22, 30, '60" = square', 'ta', 'start'))), { dl: .35, ln: .35 });
+    add(6, e => vop(e, vtx(400, 286, 'Wall A: 36 + 48 + 60 = 144 ✓', 'ta', 'start') + vtx(400, 314, 'Photograph every wall and', 'vmid', 'start') + vtx(400, 336, 'corner with the tape in view.', 'vmid', 'start')), { dl: .15, ln: .3 });
+    video({ id: 'measureV', title: 'Field measuring a kitchen', mod: 4, lesson: 'm4l1', w: 640, h: 400, els, steps: [
+      { c: 'Start with a sketch: walk the room and draw it large, not to scale, with every wall, opening and obstacle. Label the walls A, B, C and D, clockwise.' },
+      { c: 'Measure each wall at several heights: above the baseboard, at counter height and near the ceiling. Record the smallest number, because cabinets must fit at the tightest point.' },
+      { c: 'Take running dimensions: hook the tape at one corner and read the distance to every feature, like the window casing at 36 and 84 inches.', s: 'Take running dimensions: hook the tape at one corner and read the distance to every feature, like the window casing at thirty-six and eighty-four inches.' },
+      { c: 'Measure openings from the outside of one casing to the outside of the other, and note which way each door swings.' },
+      { c: 'Locate the utilities: the sink drain and supplies, gas, vents and registers, and every receptacle and switch.' },
+      { c: 'Check corners for square: mark 36 inches along one wall and 48 along the other. A square corner measures 60 inches between the marks.', s: 'Check corners for square: mark thirty-six inches along one wall and forty-eight along the other. A square corner measures sixty inches between the marks.' },
+      { c: 'Photograph every wall and corner, then confirm that each wall\'s pieces add up to its overall length before you leave the site.' }
+    ] });
+  })();
+
+  /* ---------- Video: the work triangle and landing areas ---------- */
+  (() => {
+    const { els, add } = vclip(), K = vPad(2.2, 30, 40), [X, Y] = vXY(2.2, 30, 40);
+    const S = [72, 24], Rg = [24, 54], Fr = [24, 120];
+    const legs = [[S, Rg, 'Sink to cooktop', '4\'-9"', [40, 35, 'end']], [Rg, Fr, 'Cooktop to refrigerator', '5\'-6"', [29, 64, 'start']], [Fr, S, 'Refrigerator to sink', '8\'-11"', [67, 42, 'start']]];
+    add(0, e => vpl(vpart([[128, 144], [144, 144], [144, 130]].map(q => [X(q[0]), Y(q[1])]), e), 'o2') + vpl(vpart([[144, 60], [144, 0], [0, 0], [0, 144], [90, 144]].map(q => [X(q[0]), Y(q[1])]), e), 'o2'), { ln: .4 });
+    add(0, e => vop(e, K(p => { p.rect(0, 0, 144, 24, 'cab').rect(0, 24, 24, 78, 'cab'); p.rect(54, 3, 36, 18, 'sheetf').text(72, 14, 'Sink', 'ts'); p.text(102, 21.5, 'DW', 'ts'); burners(p, 1, 39, 22, 30); p.rect(0, 102, 24, 36, 'app').text(12, 122, 'Ref.', 'ts'); p.text(140, 50, 'To family room', 'ts', 'end'); })), { dl: .3, ln: .35 });
+    legs.forEach(([a, b, , len, lp], i) => add(1, e => vpl(vpart([[X(a[0]), Y(a[1])], [X(b[0]), Y(b[1])]], e), 'acc') + vop(vcl(e * 2 - 1), K(p => p.text(lp[0], lp[1], len, 'ta', lp[2]))), { dl: .15 + i * .22, ln: .25 }));
+    add(1, e => vop(e, K(p => [S, Rg, Fr].forEach(q => p.circ(q[0], q[1], 2.2, 'bluef')))), { ln: .15 });
+    add(2, e => vop(e, vtx(365, 70, 'Each leg: 4\' to 9\'', 'ta', 'start')), { dl: .05, ln: .2 });
+    legs.forEach(([, , name, len], i) => add(2, e => vop(e, vtx(365, 98 + i * 26, `${name}  ${len}`, 'vmid', 'start') + vtx(630, 98 + i * 26, '✓', 'vok', 'end')), { dl: .15 + i * .15, ln: .2 }));
+    add(3, e => vop(e, vtx(365, 190, 'Total: 19\'-2"', 'vbig', 'start') + vtx(630, 190, '✓', 'vok', 'end') + vtx(365, 212, 'The guideline maximum is 26\'.', 'vmid', 'start')), { dl: .2, ln: .25 });
+    add(4, e => vop(e, K(p => p.rect(66, 66, 48, 36, 'cab').text(90, 87, 'Island', 'ts')) + vtx(365, 252, 'No leg crosses the island', 'vmid', 'start') + vtx(630, 252, '✓', 'vok', 'end')), { dl: .1, ln: .3 });
+    add(5, e => vpl(vpart([[108, 146], [108, 114], [152, 114]].map(q => [X(q[0]), Y(q[1])]), e), 'accd') + vop(vcl(e * 2 - 1), K(p => { p.poly([[152, 114], [147, 111], [147, 117]], 'bluef'); p.text(112, 126, 'Traffic path', 'ta', 'start'); }) + vtx(365, 278, 'Traffic stays out of the triangle', 'vmid', 'start') + vtx(630, 278, '✓', 'vok', 'end')), { dl: .1, ln: .4 });
+    add(6, e => vop(e, K(p => { [[30, 0, 24, 24, '24"'], [90, 0, 18, 24, '18"'], [0, 24, 24, 15, '15"'], [0, 69, 24, 15, '15"'], [0, 87, 24, 15, '15"']].forEach(([x, y, w, h, t]) => { p.rect(x, y, w, h, 'zone'); p.text(x + w / 2, y + h / 2 + 2, t, 'tb'); }); }) + vtx(365, 318, 'Landing: sink 24" + 18",', 'vmid', 'start') + vtx(365, 340, 'cooktop 12" + 15" or more,', 'vmid', 'start') + vtx(365, 362, 'refrigerator 15" (handle side)', 'vmid', 'start')), { dl: .15, ln: .35 });
+    video({ id: 'triangleV', title: 'Laying out the work triangle', mod: 5, lesson: 'm5l1', w: 640, h: 400, els, steps: [
+      { c: 'The work triangle connects the three primary work centers: the sink, the cooking surface and the refrigerator.' },
+      { c: 'Measure each leg from the center front of one appliance to the center front of the next.' },
+      { c: 'NKBA recommends that each leg be between 4 and 9 feet long. All three pass.', s: 'NKBA recommends that each leg be between four and nine feet long. All three pass.' },
+      { c: 'The three legs together should total no more than 26 feet. This one totals 19 feet 2 inches.', s: 'The three legs together should total no more than twenty-six feet. This one totals nineteen feet, two inches.' },
+      { c: 'No leg should cut through an island or peninsula by more than 12 inches. These legs clear the island completely.', s: 'No leg should cut through an island or peninsula by more than twelve inches. These legs clear the island completely.' },
+      { c: 'Keep major traffic out of the triangle, so people passing through don\'t cross the cook\'s path.' },
+      { c: 'Finally, check landing areas: 24 and 18 inches beside the sink, at least 12 and 15 beside the cooktop, and 15 on the refrigerator\'s handle side.', s: 'Finally, check landing areas: twenty-four and eighteen inches beside the sink, at least twelve and fifteen beside the cooktop, and fifteen on the refrigerator\'s handle side.' }
+    ] });
+  })();
+
+  window.VIDEOS = VIDS;
+
   return F;
 })();
 
@@ -1517,6 +1832,7 @@ obj: [`Measure a room systematically, including openings, heights and obstacles.
 lessons: [
 { id: `m4l1`, t: `Measuring the space`, min: 25, h: `
 <p>A beautiful design built from a bad measurement is a costly failure. Cabinets arrive a half-inch too wide, a countertop doesn't clear a window casing, a refrigerator won't fit its opening. A disciplined routine prevents almost all of it.</p>
+<vid name="measureV">The field-measuring routine, walked through on one kitchen.</vid>
 <h3>Tools</h3>
 <p>Bring a 25- or 30-foot tape with 1/16" marks, a laser distance meter, a 4-foot level, a framing square, graph paper or a tablet, pencils, a phone camera, a flashlight, a stud finder and a receptacle tester.</p>
 <h3>The routine</h3>
@@ -1608,6 +1924,7 @@ obj: [`Organize a kitchen into work centers and zones.`, `Choose an appropriate 
 lessons: [
 { id: `m5l1`, t: `Work centers, zones & the work triangle`, min: 25, h: `
 <p>A kitchen is a series of tasks: getting food out, prepping it, cooking it, serving it and cleaning up. Good plans put the tools for each task where the task happens and keep the paths between tasks short and clear.</p>
+<vid name="triangleV">Checking a layout against the work-triangle and landing-area guidelines.</vid>
 <h3>Primary work centers</h3>
 <ul>
 <li><b>Cleanup and prep:</b> the primary sink, with the dishwasher, waste and recycling nearby.</li>
@@ -1781,6 +2098,7 @@ lessons: [
 <p>Fillers, usually 1" to 3" wide and ripped to fit on site, go where cabinets meet walls and at inside corners so doors and drawers can open past walls, casings and neighboring fronts; Lesson 5 covers sizing them. Finished end panels cover exposed cabinet sides, decorative panels dress island backs, crown molding tops wall cabinets, light rail under wall cabinets hides under-cabinet lights, and toe-kick material finishes the base. Panel-ready appliances need panels ordered to the appliance maker's specifications.</p>` },
 { id: `cf2`, t: `Frameless box construction`, min: 25, h: `
 <p>A frameless cabinet is a box of flat panels with no face frame. Its doors and drawer fronts cover the front edges of the box almost completely, so the look is clean and the interior is fully open. Because nothing hides the box edges or disguises an out-of-square box, frameless construction depends on precise machining and assembly.</p>
+<vid name="cfAssembly">Watch a frameless base cabinet go together, panel by panel.</vid>
 <h3>Anatomy</h3>
 <table><thead><tr><th>Part</th><th>What it does</th></tr></thead><tbody>
 <tr><td>Sides (gables)</td><td>Carry the hinges, shelves and drawer runners through rows of system holes</td></tr>
@@ -1806,6 +2124,7 @@ lessons: [
 <aside class="tip"><p><b>Frameless versus face-frame at a glance.</b> Frameless gives more usable width, larger drawers and a clean modern look, and standard hardware mounts straight into its system holes. Face-frame construction is more forgiving of uneven walls and suits inset doors and traditional detailing. Module 7 compares them in detail.</p></aside>` },
 { id: `cf3`, t: `The 32 mm system`, min: 30, h: `
 <p>The 32 mm system is the organizing idea behind frameless cabinetry. It grew out of postwar Europe, where manufacturers needed to build cabinets quickly and accurately from sheet goods. Multi-spindle boring machines drilled whole rows of holes in one pass, and their spindles were spaced 32 mm apart. Standardizing that spacing let every hinge, shelf pin and drawer runner mount in the same holes, no matter who made the cabinet or the hardware.</p>
+<vid name="sys32v">The 32 mm system, hole by hole.</vid>
 <fig name="sys32">A cabinet side with front and rear rows of system holes. The detail shows the numbers that define the system.</fig>
 <h3>The defining numbers</h3>
 <table><thead><tr><th>Dimension</th><th>Standard</th><th>About</th></tr></thead><tbody>
@@ -1832,6 +2151,7 @@ lessons: [
 <aside class="tip"><p><b>Working the grid.</b> If the first shelf-pin hole is 96 mm above the bottom panel, the next holes are at 128, 160 and 192 mm: every position is the first one plus a multiple of 32 mm.</p></aside>` },
 { id: `cf4`, t: `Concealed hinges, doors & reveals`, min: 30, h: `
 <p>Frameless doors hang on concealed cup hinges, often called European hinges. They're invisible when the door is closed, they adjust in three directions, and they're chosen by how much of the cabinet side the door covers.</p>
+<vid name="hingeV">Boring, hanging, swinging and adjusting a concealed-hinge door.</vid>
 <fig name="hingeTypes">Left: a full-overlay cup hinge in plan section. Right: the three arm types, defined by how the door relates to the cabinet side.</fig>
 <h3>Parts of a cup hinge</h3>
 <ul>
@@ -1873,6 +2193,7 @@ lessons: [
 <p>Heights follow the same logic: subtract the top and bottom reveals, and any gaps between stacked fronts, from the height available. Base-cabinet fronts usually stop a little below the top of the box, commonly about 1/8", so they clear the underside of the countertop.</p>` },
 { id: `cf5`, t: `Drawers, fronts & frameless layout`, min: 30, h: `
 <p>Drawers are where frameless cabinets earn their reputation: with no stiles in the way, drawer boxes can be nearly as wide as the cabinet. This lesson covers drawer hardware, sizing stacks of drawer fronts, and the fillers and corner details that keep a frameless run working.</p>
+<vid name="frontsV">Sizing frameless doors and drawer fronts, step by step.</vid>
 <h3>Drawer systems</h3>
 <table><thead><tr><th>Type</th><th>Characteristics</th></tr></thead><tbody>
 <tr><td>Undermount concealed runners</td><td>Hidden beneath the drawer box; full extension, soft-close, and synchronized versions for wide drawers. The box rests on the runners, and each runner system has its own drawer-box width formula and back notching.</td></tr>
@@ -1987,6 +2308,7 @@ lessons: [
 <p>The price is space. Every stile narrows the openings, so drawers and roll-outs are smaller than in a frameless cabinet of the same width.</p>` },
 { id: `cp2`, t: `Sizing face-frame doors & drawers`, min: 30, h: `
 <p>Face-frame fronts are sized from the frame openings, not from the box. Read the opening sizes from the manufacturer or measure them, then add the overlay or subtract the reveal.</p>
+<vid name="ffV">Overlay versus inset: sizing face-frame doors from the opening.</vid>
 <h3>The formulas</h3>
 <table><thead><tr><th>Front</th><th>Size</th></tr></thead><tbody>
 <tr><td>Partial or full overlay</td><td>Opening + 2 × overlay, in each direction</td></tr>
@@ -3116,7 +3438,7 @@ function navHTML(cur) {
   let h = a('#/', '', 'Course home', '', 'home') + '<h2>Course plan</h2>';
   MODS.forEach(m => { h += a('#/m/' + m.n, m.n, m.title, stMod(m), m.id); if (m.n === C.midterm.after) h += a('#/test/midterm', '', C.midterm.title, testSt('midterm'), 'midterm'); });
   h += a('#/capstone', '', C.capstone.title, capDone() ? doneMark : '', 'capstone') + a('#/test/final', '', C.final.title, testSt('final'), 'final');
-  h += '<h2>Study tools</h2>' + a('#/cards', '', 'Flashcards', '', 'cards') + a('#/glossary', '', 'Glossary', '', 'glossary') + a('#/reference', '', 'Quick reference', '', 'reference') + a('#/tools', '', 'Calculators', '', 'tools') + a('#/board/free', '', 'Drafting board', '', 'board');
+  h += '<h2>Study tools</h2>' + a('#/videos', '', 'Video lessons', '', 'videos') + a('#/cards', '', 'Flashcards', '', 'cards') + a('#/glossary', '', 'Glossary', '', 'glossary') + a('#/reference', '', 'Quick reference', '', 'reference') + a('#/tools', '', 'Calculators', '', 'tools') + a('#/board/free', '', 'Drafting board', '', 'board');
   return h;
 }
 function renderNav(id) {
@@ -3135,7 +3457,7 @@ function fig(n, cap) {
   let s = ''; try { s = f(); } catch (e) { console.error('Figure failed', n, e); }
   return `<figure class="fg"><div class="fgb">${s}</div>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`;
 }
-const rich = h => h.replace(/<fig name="(\w+)">([\s\S]*?)<\/fig>/g, (_, n, cap) => fig(n, cap.trim())).replace(/<table>/g, '<div class="tw"><table>').replace(/<\/table>/g, '</table></div>');
+const rich = h => h.replace(/<vid name="(\w+)">([\s\S]*?)<\/vid>/g, (_, n, cap) => { const v = vidById(n); return v ? playerHTML(v, cap.trim()) : ''; }).replace(/<fig name="(\w+)">([\s\S]*?)<\/fig>/g, (_, n, cap) => fig(n, cap.trim())).replace(/<table>/g, '<div class="tw"><table>').replace(/<\/table>/g, '</table></div>');
 const statusTxt = ok => ok ? '<span style="color:var(--brass)">Complete</span>' : 'In progress';
 function toggleBtn(el, on, onLbl, offLbl) { el.classList.toggle('on', on); el.classList.toggle('pri', !on); el.textContent = on ? onLbl : offLbl; el.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 const notFound = () => ({ id: '', title: 'Page not found', html: `<h1 class="pt">That page isn't in this course</h1><p class="lede">The link may be out of date. Pick a module from the course plan.</p><p><a class="btn pri" href="#/">Go to course home</a></p>` });
@@ -3177,6 +3499,7 @@ function viewHome() {
 <h2 class="sec">Course plan</h2><ol class="index">${idx}</ol>
 <h2 class="sec">Study tools</h2>
 <div class="tools-list">
+<a href="#/videos"><b>Video lessons</b><span>Animated, narrated walkthroughs: cabinet assembly, the 32 mm system, hinges, sizing fronts, measuring and the work triangle</span></a>
 <a href="#/cards"><b>Flashcards</b><span>Every key term in the course, on index cards</span></a>
 <a href="#/glossary"><b>Glossary</b><span>Searchable definitions with links back to each module</span></a>
 <a href="#/reference"><b>Quick reference</b><span>The key dimensions and guideline numbers in one place</span></a>
@@ -3752,6 +4075,148 @@ ${num('sF', 'Feet', 12, 'min="0"')}${num('sI', 'Inches', 6, 'min="0" step="0.25"
   } };
 }
 
+/* ---------- animated video lessons: player ---------- */
+const VIDS = window.VIDEOS || [];
+const vidById = id => VIDS.find(v => v.id === id);
+const TTS = { ok: typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance === 'function', voice: null };
+function ttsVoice() {
+  if (!TTS.ok) return null;
+  if (TTS.voice) return TTS.voice;
+  let vs = []; try { vs = speechSynthesis.getVoices() || []; } catch (e) { /* ignore */ }
+  TTS.voice = vs.find(v => /^en[-_]US/i.test(v.lang) && v.localService) || vs.find(v => /^en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+  return TTS.voice;
+}
+if (TTS.ok) { try { speechSynthesis.addEventListener('voiceschanged', () => { TTS.voice = null; ttsVoice(); }); } catch (e) { /* ignore */ } }
+const narrPref = { get() { try { return localStorage.getItem('kbd40:narr') !== 'off'; } catch (e) { return true; } }, set(v) { try { localStorage.setItem('kbd40:narr', v ? 'on' : 'off'); } catch (e) { /* ignore */ } } };
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const VICON = {
+  play: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z" fill="currentColor"/></svg>',
+  pause: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg>',
+  replay: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3a5 5 0 1 1-4.6 3H1.8A6.5 6.5 0 1 0 3.3 3.5L2 2.2V6h3.8L4.4 4.6A5 5 0 0 1 8 3z" fill="currentColor"/></svg>',
+  prev: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h2v10H3zM13 3v10L6 8z" fill="currentColor"/></svg>',
+  next: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3h2v10h-2zM3 3v10l7-5z" fill="currentColor"/></svg>'
+};
+let VACTIVE = null;
+function playerHTML(v, cap) {
+  const ticks = v.steps.slice(1).map(s => `<i style="left:${(s.t0 / v.total * 100).toFixed(2)}%"></i>`).join('');
+  return `<figure class="vplayer" data-vid="${v.id}">
+<div class="vhead"><span>${esc(v.title)}</span><span class="vdur">${mmss(v.total)} · ${v.steps.length} steps</span></div>
+<div class="vstage" tabindex="0" aria-label="${esc(v.title)}. Press space to play or pause, and the arrow keys to move between steps."><div class="vsvg"></div><button type="button" class="vgo" aria-label="Play ${esc(v.title)}">${VICON.play}</button></div>
+<p class="vcap" aria-live="polite"></p>
+<div class="vctl"><button type="button" class="btn pri vplay">${VICON.play}<span>Play</span></button><button type="button" class="btn ghost vbtn vprev" aria-label="Previous step">${VICON.prev}</button><button type="button" class="btn ghost vbtn vnext" aria-label="Next step">${VICON.next}</button>
+<div class="vseekw"><input type="range" class="vseek" min="0" max="1000" step="1" value="0" aria-label="Position in the video"><div class="vticks" aria-hidden="true">${ticks}</div></div><span class="vtime">0:00 / ${mmss(v.total)}</span>
+<select class="vspeed" aria-label="Playback speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>${TTS.ok ? '<button type="button" class="btn ghost vnarr" aria-pressed="true">Narration on</button>' : ''}</div>
+<details class="vtrans"><summary>Transcript and chapters</summary><ol>${v.steps.map((s, i) => `<li><button type="button" class="vjump" data-k="${i}">${mmss(s.t0)}</button> ${esc(s.c)}</li>`).join('')}</ol></details>
+${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`;
+}
+function mountPlayer(el) {
+  const v = vidById(el.dataset.vid); if (!v || el.dataset.ready) return null;
+  el.dataset.ready = '1';
+  const $e = s => el.querySelector(s), svgEl = $e('.vsvg'), capEl = $e('.vcap'), playB = $e('.vplay'), goB = $e('.vgo'), seek = $e('.vseek'), timeEl = $e('.vtime'), narrB = $e('.vnarr'), speedS = $e('.vspeed'), stage = $e('.vstage');
+  const S = v.steps, last = S.length - 1, poster = Math.max(0, S[0].dur - .05);
+  let t = 0, playing = false, started = false, raf = 0, prevNow = 0, speed = 1, narr = TTS.ok && narrPref.get();
+  let spoken = -1, speaking = false, uttId = 0, speakAt = 0, begun = false, holdAt = 0, drawnT = -1;
+  const stepAt = x => { let k = 0; while (k < last && S[k + 1].t0 <= x + 1e-6) k++; return k; };
+  function draw() {
+    const ft = started ? t : poster;
+    if (ft !== drawnT) { svgEl.innerHTML = v.frame(ft); drawnT = ft; }
+    const k = stepAt(t);
+    if (capEl.dataset.k !== String(k)) { capEl.dataset.k = k; capEl.textContent = S[k].c; }
+    seek.value = Math.round(t / v.total * 1000);
+    timeEl.textContent = `${mmss(t)} / ${mmss(v.total)}`;
+  }
+  let uiKey = '';
+  function ui() {
+    const end = started && t >= v.total - .01, key = [playing, end, started, narr].join();
+    if (key === uiKey) return; uiKey = key;
+    playB.innerHTML = playing ? VICON.pause + '<span>Pause</span>' : end ? VICON.replay + '<span>Replay</span>' : VICON.play + '<span>Play</span>';
+    goB.hidden = playing || (started && !end);
+    goB.innerHTML = end ? VICON.replay : VICON.play;
+    if (narrB) { narrB.setAttribute('aria-pressed', String(narr)); narrB.textContent = narr ? 'Narration on' : 'Narration off'; }
+  }
+  function hush() { uttId++; speaking = false; spoken = -1; if (TTS.ok) { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } } }
+  function speak(k) {
+    if (!narr || !TTS.ok) return;
+    hush();
+    const id = uttId, u = new SpeechSynthesisUtterance(S[k].s || S[k].c), vo = ttsVoice();
+    if (vo) { u.voice = vo; u.lang = vo.lang; } else u.lang = 'en-US';
+    u.rate = speed;
+    u.onstart = () => { if (id === uttId) begun = true; };
+    u.onend = u.onerror = () => { if (id === uttId) speaking = false; };
+    speaking = true; begun = false; spoken = k; speakAt = performance.now(); holdAt = 0;
+    setTimeout(() => { if (id !== uttId) return; try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { speaking = false; } }, 60);
+  }
+  function tick(now) {
+    raf = 0;
+    if (!playing) return;
+    const dt = Math.min(.1, (now - prevNow) / 1000) * speed; prevNow = now;
+    let nt = t + dt;
+    const k = stepAt(t), end = S[k].t0 + S[k].dur;
+    if (narr && speaking) {
+      if (!begun && now - speakAt > 1500) speaking = false; /* no voice available: don't wait */
+      else if (nt >= end - .02) { nt = Math.max(t, end - .02); if (!holdAt) holdAt = now; else if (now - holdAt > 9000) speaking = false; }
+    }
+    if (nt >= v.total) { t = v.total; playing = false; hush(); draw(); ui(); const w = sec('videos'); if (!w[v.id]) { w[v.id] = true; saveP(); } return; }
+    t = nt;
+    const k2 = stepAt(t);
+    if (narr && k2 !== spoken) speak(k2);
+    draw();
+    raf = requestAnimationFrame(tick);
+  }
+  function play() {
+    if (VACTIVE && VACTIVE !== api) VACTIVE.pause();
+    VACTIVE = api;
+    if (!started) { started = true; t = 0; }
+    if (t >= v.total - .01) t = 0;
+    playing = true; prevNow = performance.now();
+    if (narr) speak(stepAt(t));
+    ui(); draw();
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function pause() { playing = false; hush(); if (raf) { cancelAnimationFrame(raf); raf = 0; } ui(); }
+  function jump(k) {
+    k = Math.max(0, Math.min(last, k));
+    started = true; hush();
+    t = playing ? S[k].t0 : S[k].t0 + S[k].dur - .05;
+    if (playing && narr) speak(k);
+    draw(); ui();
+  }
+  const api = { pause };
+  playB.addEventListener('click', () => playing ? pause() : play());
+  goB.addEventListener('click', ev => { ev.stopPropagation(); play(); });
+  $e('.vprev').addEventListener('click', () => { const k = stepAt(t); jump(t - S[k].t0 > 1.5 && playing ? k : k - 1); });
+  $e('.vnext').addEventListener('click', () => { const k = stepAt(t); if (k === last) { t = v.total; started = true; pause(); draw(); ui(); } else jump(k + 1); });
+  seek.addEventListener('input', () => { started = true; t = +seek.value / 1000 * v.total; hush(); if (playing && narr) speak(stepAt(t)); draw(); ui(); });
+  speedS.addEventListener('change', () => { speed = +speedS.value || 1; if (playing && narr) speak(stepAt(t)); });
+  if (narrB) narrB.addEventListener('click', () => { narr = !narr; narrPref.set(narr); if (!narr) hush(); else if (playing) speak(stepAt(t)); ui(); });
+  el.querySelectorAll('.vjump').forEach(b => b.addEventListener('click', () => { jump(+b.dataset.k); stage.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }));
+  stage.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('.vgo')) return; playing ? pause() : play(); });
+  stage.addEventListener('keydown', ev => {
+    if (ev.key === ' ' || ev.key === 'k') { ev.preventDefault(); playing ? pause() : play(); }
+    else if (ev.key === 'ArrowRight') { ev.preventDefault(); jump(stepAt(t) + 1); }
+    else if (ev.key === 'ArrowLeft') { ev.preventDefault(); jump(stepAt(t) - 1); }
+  });
+  draw(); ui();
+  return () => { playing = false; hush(); if (raf) cancelAnimationFrame(raf); if (VACTIVE === api) VACTIVE = null; };
+}
+function mountPlayers(root) {
+  const cs = Array.from(root.querySelectorAll('.vplayer')).map(mountPlayer).filter(Boolean);
+  return cs.length ? () => cs.forEach(f => f()) : null;
+}
+function vidLesson(v) {
+  const m = MODS.find(x => x.n === v.mod), i = m ? m.lessons.findIndex(l => l.id === v.lesson) : -1;
+  return m && i >= 0 ? { m, l: m.lessons[i], href: `#/m/${m.n}/l/${i + 1}` } : null;
+}
+function viewVideos() {
+  const w = sec('videos'), mods = [...new Set(VIDS.map(v => v.mod))].sort((a, b) => a - b);
+  const total = VIDS.reduce((a, v) => a + v.total, 0);
+  return { id: 'videos', title: 'Video lessons', html: `
+<h1 class="pt">Video lessons</h1>
+<p class="lede">Short animated walkthroughs of key skills, ${VIDS.length} in all (about ${Math.round(total / 60)} minutes). Each one also appears in its lesson. Narration uses your browser's built-in voice, so it varies by device; turn it off to read the captions instead.</p>
+<p class="muted">${VIDS.filter(v => w[v.id]).length} of ${VIDS.length} watched to the end.</p>
+${mods.map(n => { const m = MODS.find(x => x.n === n); return `<h2 class="sec">Module ${n}: ${esc(m ? m.title : '')}</h2>${VIDS.filter(v => v.mod === n).map(v => { const L = vidLesson(v); return `<div class="vitem"><p class="vmeta">${w[v.id] ? '<span class="good">✓</span> Watched · ' : ''}From ${L ? `<a href="${L.href}">${esc(L.l.t)}</a>` : 'the course'}</p>${playerHTML(v)}</div>`; }).join('')}`; }).join('')}` };
+}
+
 /* ---------- drafting board ---------- */
 const SHEETS = () => [['free', 'Free sheet'], ...MODS.filter(m => m.lab.board).map(m => [m.id, `Module ${m.n}: ${m.lab.t}`]), ['cap', 'Capstone project']];
 function viewBoard(id) {
@@ -3979,6 +4444,7 @@ function route() {
     else if (r[0] === 'capstone') v = viewCapstone();
     else if (r[0] === 'board') v = viewBoard(r[1] || 'free');
     else if (r[0] === 'tools') v = viewTools();
+    else if (r[0] === 'videos') v = viewVideos();
     else if (r[0] === 'glossary') v = viewGlossary();
     else if (r[0] === 'reference') v = viewReference();
     else if (r[0] === 'cards') v = viewCards(null);
@@ -3994,6 +4460,7 @@ function route() {
   window.scrollTo(0, 0);
   const h1 = $('h1', main); if (h1) { h1.setAttribute('tabindex', '-1'); try { h1.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
   if (v.after) { try { cleanup = v.after() || null; } catch (e) { console.error(e); } }
+  try { const pc = mountPlayers(main); if (pc) { const prev = cleanup; cleanup = () => { pc(); if (prev) prev(); }; } } catch (e) { console.error(e); }
   if (v.track) { P().last = location.hash; saveP(); }
 }
 
